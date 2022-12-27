@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'shinagawa-shelter
+
+  Sample SAM Template for shinagawa-shelter
+
+  '
+Globals:
+  Function:
+    Timeout: 5
+    MemorySize: 128
+Resources:
+  ShelterApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ShelterApiFunction
+      Handler: shelter-api
+      Runtime: go1.x
+      Architectures:
+      - x86_64
+      Events:
+        CatchAll:
+          Type: Api
+          Properties:
+            Path: /search
+            Method: GET
+      Environment:
+        Variables:
+          PARAM1: VALUE
+      Role: arn:aws:iam::880843126767:role/techboost-lambda
+    Metadata:
+      SamResourceId: ShelterApiFunction
+Outputs:
+  HelloWorldAPI:
+    Description: API Gateway endpoint URL for Prod environment for First Function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  ShelterApiFunction:
+    Description: First Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - ShelterApiFunction
+      - Arn
