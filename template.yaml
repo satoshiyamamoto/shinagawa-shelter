@@ -10,6 +10,13 @@ Globals:
   Function:
     Timeout: 5
     MemorySize: 128
+    Environment:
+      Variables:
+        DB_HOST: 127.0.0.1
+        DB_NAME: pastgres
+        DB_USER: pastgres
+        DB_PASSWORD: pastgres
+        DATASET_URLS: https://www.opendata.metro.tokyo.lg.jp/shinagawa/hinanjo.csv
 
 Resources:
   ShelterApiFunction:
