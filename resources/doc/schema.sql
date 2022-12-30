@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS shelters (
-  id SERIAL,
-  facility_name TEXT UNIQUE,
-  facility_name_en TEXT,
-  category                    TEXT,
+  id                          SERIAL,
+  facility_name               TEXT UNIQUE NOT NULL,
+  facility_name_en            TEXT,
+  category                    JSON,
   prefecture                  TEXT,
   city                        TEXT,
   administrative_district     TEXT,
@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS shelters (
   telephone_number            TEXT,
   target_district             TEXT,
   target_district_description TEXT,
-  latitude                    DECIMAL,
-  longitude                   DECIMAL,
+  latitude                    DECIMAL NOT NULL,
+  longitude                   DECIMAL NOT NULL,
   above_sea_level             DECIMAL,
   facility_capacity           INTEGER,
   facility_height             DECIMAL,
@@ -27,6 +27,6 @@ CREATE TABLE IF NOT EXISTS shelters (
   description                 TEXT,
   description_en              TEXT,
   standard_area_code          TEXT,
-  created_at                  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at                  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at                  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at                  TIMESTAMP
 );
