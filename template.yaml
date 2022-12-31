@@ -8,17 +8,36 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 5
+    Timeout: 30
     MemorySize: 128
     Environment:
       Variables:
         DB_HOST: 127.0.0.1
-        DB_NAME: pastgres
-        DB_USER: pastgres
-        DB_PASSWORD: pastgres
-        DATASET_URLS: https://www.opendata.metro.tokyo.lg.jp/shinagawa/hinanjo.csv
+        DB_NAME: postgres
+        DB_USER: postgres
+        DB_PASSWORD: postgres
 
 Resources:
+  ShelterSyncFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: resources/cmd/shelter-sync/
+      Handler: shelter-sync
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      Events:
+        Schedule:
+          Properties:
+            Schedule: 'rate(5 minutes)'
+            Name: ShelterSyncFunction
+            Description: HelloWorldFunction
+            Enabled: true
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+          DATASET_URLS: https://www.opendata.metro.tokyo.lg.jp/shinagawa/hinanjo.csv,http://www.city.shinagawa.tokyo.jp/ct/other000081500/ittokishugobasho.csv
+      Role: arn:aws:iam::880843126767:role/techboost-lambda
   ShelterApiFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -45,6 +64,9 @@ Outputs:
   HelloWorldAPI:
     Description: "API Gateway endpoint URL for Prod environment for First Function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  ShelterSyncFunction:
+    Description: "First Lambda Function ARN"
+    Value: !GetAtt ShelterSyncFunction.Arn
   ShelterApiFunction:
     Description: "First Lambda Function ARN"
     Value: !GetAtt ShelterApiFunction.Arn
