@@ -181,6 +181,8 @@ const (
 			updated_at
 		FROM
 			shelters
+		WHERE
+			0 = 0
 	`
 )
 
@@ -195,8 +197,15 @@ func init() {
 	log.Println("connected to database")
 }
 
-func FindShelters() ([]*model.Shelter, error) {
-	rows, err := db.Query(QUERY_SELECT_ALL)
+func FindShelters(category *string, page, pageSize *int) ([]*model.Shelter, error) {
+	q := QUERY_SELECT_ALL
+	if category != nil {
+		q += fmt.Sprintf(" AND category::jsonb ? '%s' ", *category)
+	}
+	q += fmt.Sprintf(" LIMIT %d ", *pageSize)
+	q += fmt.Sprintf(" OFFSET %d ", (*page-1)**pageSize)
+
+	rows, err := db.Query(q)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +220,7 @@ func FindShelters() ([]*model.Shelter, error) {
 			&s.ID,
 			&s.FacilityName,
 			&s.EnglishFacilityName,
-			&s.Category,
+			&categoryJSON,
 			&s.Prefecture,
 			&s.City,
 			&s.AdministrativeDistrict,
@@ -425,84 +434,87 @@ func DeleteShelter(s *model.Shelter) error {
 func MergeShelter(s *model.Shelter) (*model.Shelter, error) {
 	ex, err := FindShelter(s.FacilityName)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		fmt.Println(err)
+		log.Println("failed to merge shelter", err)
 		return s, err
 	}
 
+	// add new shelter
 	if ex == nil {
 		SaveShelter(s)
-	} else {
-		if s.EnglishFacilityName == nil {
-			s.EnglishFacilityName = ex.EnglishFacilityName
-		}
-		for _, c := range ex.Category {
-			s.AddCategory(c)
-		}
-		if s.Prefecture == nil {
-			s.Prefecture = ex.Prefecture
-		}
-		if s.AdministrativeDistrict == nil {
-			s.AdministrativeDistrict = ex.AdministrativeDistrict
-		}
-		if s.Address == nil {
-			s.Address = ex.Address
-		}
-		if s.AddressKana == nil {
-			s.AddressKana = ex.AddressKana
-		}
-		if s.TelephoneNumber == nil {
-			s.TelephoneNumber = ex.TelephoneNumber
-		}
-		if s.TargetDistrict == nil {
-			s.TargetDistrict = ex.TargetDistrict
-		}
-		if s.TargetDistrictDescription == nil {
-			s.TargetDistrictDescription = ex.TargetDistrictDescription
-		}
-		if s.AboveSeaLevel == nil {
-			s.AboveSeaLevel = ex.AboveSeaLevel
-		}
-		if s.FacilityCapacity == nil {
-			s.FacilityCapacity = ex.FacilityCapacity
-		}
-		if s.FacilityHeight == nil {
-			s.FacilityHeight = ex.FacilityHeight
-		}
-		if s.Flood == nil {
-			s.Flood = ex.Flood
-		}
-		if s.Landslide == nil {
-			s.Landslide = ex.Landslide
-		}
-		if s.StormSurge == nil {
-			s.StormSurge = ex.StormSurge
-		}
-		if s.Earthquake == nil {
-			s.Earthquake = ex.Earthquake
-		}
-		if s.Tsunami == nil {
-			s.Tsunami = ex.Tsunami
-		}
-		if s.Inundation == nil {
-			s.Inundation = ex.Inundation
-		}
-		if s.Fire == nil {
-			s.Fire = ex.Fire
-		}
-		if s.Eruption == nil {
-			s.Eruption = ex.Eruption
-		}
-		if s.Description == nil {
-			s.Description = ex.Description
-		}
-		if s.EnglishDescription == nil {
-			s.EnglishDescription = ex.EnglishDescription
-		}
-		if s.StandardAreaCode == nil {
-			s.StandardAreaCode = ex.StandardAreaCode
-		}
-		UpdateShelter(s)
+		return s, nil
 	}
+
+	// update an existing shelter
+	if s.EnglishFacilityName == nil {
+		s.EnglishFacilityName = ex.EnglishFacilityName
+	}
+	for _, c := range ex.Category {
+		s.AddCategory(c)
+	}
+	if s.Prefecture == nil {
+		s.Prefecture = ex.Prefecture
+	}
+	if s.AdministrativeDistrict == nil {
+		s.AdministrativeDistrict = ex.AdministrativeDistrict
+	}
+	if s.Address == nil {
+		s.Address = ex.Address
+	}
+	if s.AddressKana == nil {
+		s.AddressKana = ex.AddressKana
+	}
+	if s.TelephoneNumber == nil {
+		s.TelephoneNumber = ex.TelephoneNumber
+	}
+	if s.TargetDistrict == nil {
+		s.TargetDistrict = ex.TargetDistrict
+	}
+	if s.TargetDistrictDescription == nil {
+		s.TargetDistrictDescription = ex.TargetDistrictDescription
+	}
+	if s.AboveSeaLevel == nil {
+		s.AboveSeaLevel = ex.AboveSeaLevel
+	}
+	if s.FacilityCapacity == nil {
+		s.FacilityCapacity = ex.FacilityCapacity
+	}
+	if s.FacilityHeight == nil {
+		s.FacilityHeight = ex.FacilityHeight
+	}
+	if s.Flood == nil {
+		s.Flood = ex.Flood
+	}
+	if s.Landslide == nil {
+		s.Landslide = ex.Landslide
+	}
+	if s.StormSurge == nil {
+		s.StormSurge = ex.StormSurge
+	}
+	if s.Earthquake == nil {
+		s.Earthquake = ex.Earthquake
+	}
+	if s.Tsunami == nil {
+		s.Tsunami = ex.Tsunami
+	}
+	if s.Inundation == nil {
+		s.Inundation = ex.Inundation
+	}
+	if s.Fire == nil {
+		s.Fire = ex.Fire
+	}
+	if s.Eruption == nil {
+		s.Eruption = ex.Eruption
+	}
+	if s.Description == nil {
+		s.Description = ex.Description
+	}
+	if s.EnglishDescription == nil {
+		s.EnglishDescription = ex.EnglishDescription
+	}
+	if s.StandardAreaCode == nil {
+		s.StandardAreaCode = ex.StandardAreaCode
+	}
+	UpdateShelter(s)
 
 	return s, nil
 }
