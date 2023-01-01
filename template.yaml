@@ -12,10 +12,27 @@ Globals:
     MemorySize: 128
     Environment:
       Variables:
-        DB_HOST: 127.0.0.1
-        DB_NAME: postgres
-        DB_USER: postgres
-        DB_PASSWORD: postgres
+        DB_HOST: !Ref DatabaseHost
+        DB_NAME: !Ref DatabaseName
+        DB_USER: !Ref DatabaseUser
+        DB_PASSWORD: !Ref DatabasePassword
+
+Parameters:
+  DatabaseHost:
+    Type: String
+    Default: 127.0.0.1
+  DatabaseName:
+    Type: String
+    Default: postgres
+  DatabaseUser:
+    Type: String
+    Default: postgres
+  DatabasePassword:
+    Type: String
+    Default: postgres
+  DatasetUrls:
+    Type: String
+    Default: https://www.opendata.metro.tokyo.lg.jp/shinagawa/hinanjo.csv,http://www.city.shinagawa.tokyo.jp/ct/other000081500/ittokishugobasho.csv
 
 Resources:
   ShelterSyncFunction:
@@ -35,8 +52,7 @@ Resources:
             Enabled: true
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
-          PARAM1: VALUE
-          DATASET_URLS: https://www.opendata.metro.tokyo.lg.jp/shinagawa/hinanjo.csv,http://www.city.shinagawa.tokyo.jp/ct/other000081500/ittokishugobasho.csv
+          DATASET_URLS: !Ref DatasetUrls
       Role: arn:aws:iam::880843126767:role/techboost-lambda
   ShelterApiFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
