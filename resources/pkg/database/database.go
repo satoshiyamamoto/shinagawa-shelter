@@ -199,7 +199,7 @@ func init() {
 
 func FindShelters(category *string, page, pageSize *int) ([]*model.Shelter, error) {
 	q := QUERY_SELECT_ALL
-	if category != nil {
+	if len(*category) > 0 {
 		q += fmt.Sprintf(" AND category::jsonb ? '%s' ", *category)
 	}
 	q += fmt.Sprintf(" LIMIT %d ", *pageSize)
