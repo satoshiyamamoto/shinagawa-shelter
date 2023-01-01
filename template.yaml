@@ -44,8 +44,10 @@ Resources:
         - x86_64
       Events:
         Schedule:
+          Type: Schedule
           Properties:
             Schedule: 'rate(1 hour)'
+            Enabled: true
       Environment:
         Variables:
           DATASET_URLS: !Ref DatasetUrls
@@ -70,12 +72,12 @@ Resources:
       Role: arn:aws:iam::880843126767:role/techboost-lambda
 
 Outputs:
-  HelloWorldAPI:
+  ShelterApiEndpoint:
     Description: "API Gateway endpoint URL for Prod environment for First Function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  ShelterSyncFunction:
-    Description: "First Lambda Function ARN"
-    Value: !GetAtt ShelterSyncFunction.Arn
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/search"
   ShelterApiFunction:
     Description: "First Lambda Function ARN"
     Value: !GetAtt ShelterApiFunction.Arn
+  ShelterSyncFunction:
+    Description: "First Lambda Function ARN"
+    Value: !GetAtt ShelterSyncFunction.Arn
