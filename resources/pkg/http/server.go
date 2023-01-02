@@ -8,17 +8,44 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"shinagawa-shelter/pkg/config"
 	"shinagawa-shelter/pkg/database"
 	"shinagawa-shelter/pkg/model"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 )
 
-func SyncHandler(ctx context.Context) error {
+var (
+	// DefaultHTTPGetAddress Default Address
+	DefaultHTTPGetAddress = "https://checkip.amazonaws.com"
 
+	// ErrNoIP No IP found in response
+	ErrNoIP = errors.New("No IP in HTTP response")
+
+	// ErrNon200Response non 200 status code in response
+	ErrNon200Response = errors.New("Non 200 Response found")
+
+	// DefaultCategory Default category
+	DefaultCategory string = ""
+
+	// DefaultPage Default Page number
+	DefaultPage = 1
+
+	// DefaultPageSize Default Page size
+	DefaultPageSize = 10
+
+	// MaxPageSize Maximum Page size
+	MaxPageSize = math.MaxInt
+)
+
+func SyncHandler(ctx context.Context) error {
+	runningAt := time.Now()
+
+	// Update the shelters
 	for _, url := range config.DatasetURLs {
 		log.Println("get dataset from", url)
 		body, err := GetDataset(url)
@@ -28,11 +55,11 @@ func SyncHandler(ctx context.Context) error {
 		}
 
 		r := csv.NewReader(body)
-		r.Read() // truncate header
+		r.Read() // Skip header
 
 		records, err := r.ReadAll()
 		if err == io.EOF {
-			log.Println("dataaset is empty")
+			log.Println("dataset is empty")
 			return nil
 		}
 		if err != nil {
@@ -47,25 +74,27 @@ func SyncHandler(ctx context.Context) error {
 		log.Printf("%d shelters synced", len(records))
 	}
 
+	// Delete the closed shelters
+	shelters, err := database.FindShelters(&DefaultCategory, &DefaultPage, &MaxPageSize)
+	if err != nil {
+		log.Println("failed to delete closed shelters")
+		return err
+	}
+
+	i := 0
+	for _, s := range shelters {
+		if s.UpdatedAt != nil && s.UpdatedAt.Before(runningAt) {
+			database.DeleteShelter(s)
+			i++
+		}
+	}
+
+	if i > 0 {
+		log.Printf("%d shelters deleted", i)
+	}
+
 	return nil
 }
-
-var (
-	// DefaultHTTPGetAddress Default Address
-	DefaultHTTPGetAddress = "https://checkip.amazonaws.com"
-
-	// ErrNoIP No IP found in response
-	ErrNoIP = errors.New("No IP in HTTP response")
-
-	// ErrNon200Response non 200 status code in response
-	ErrNon200Response = errors.New("Non 200 Response found")
-
-	// DefaultPaze Default Page number
-	DefaultPaze = 1
-
-	// DefaultPazeSize Default Page size
-	DefaultPazeSize = 10
-)
 
 func ApiHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	resp, err := http.Get(DefaultHTTPGetAddress)
@@ -89,11 +118,11 @@ func ApiHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRe
 	category := request.QueryStringParameters["category"]
 	page, err := strconv.Atoi(request.QueryStringParameters["page"])
 	if page < 1 || err != nil {
-		page = DefaultPaze
+		page = DefaultPage
 	}
 	size, err := strconv.Atoi(request.QueryStringParameters["size"])
 	if size < 1 || err != nil {
-		size = DefaultPazeSize
+		size = DefaultPageSize
 	}
 
 	shelters, err := database.FindShelters(&category, &page, &size)
