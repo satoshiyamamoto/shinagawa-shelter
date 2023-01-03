@@ -246,24 +246,32 @@ func NewCondition(c map[string]string) *Condition {
 	}
 }
 
+func (c *Condition) Build() string {
+	var query string
+
+	// category
+	if len(*c.Category) > 0 {
+		query += fmt.Sprintf(" AND category::jsonb ? '%s' ", *c.Category)
+	}
+	// order by distance
+	if *c.Latitude > 0 && *c.Longitude > 0 {
+		query += fmt.Sprintf(" ORDER BY POINT(latitude, longitude) <-> POINT(%f, %f) ", *c.Latitude, *c.Longitude)
+	}
+	// pagenation
+	query += fmt.Sprintf(" LIMIT %d OFFSET %d ", c.PageSize, (c.Page-1)*c.PageSize)
+
+	return query
+}
+
 func FindShelters(c *Condition) ([]*model.Shelter, error) {
 	query := QUERY_SELECT_ALL
 
-	// build where clause
 	if c != nil {
-		// category
-		if len(*c.Category) > 0 {
-			query += fmt.Sprintf(" AND category::jsonb ? '%s' ", *c.Category)
-		}
-		// order by distance
-		if *c.Latitude > 0 && *c.Longitude > 0 {
-			query += fmt.Sprintf(" ORDER BY POINT(latitude, longitude) <-> POINT(%f, %f) ", *c.Latitude, *c.Longitude)
-		}
-		// pagenation
-		query += fmt.Sprintf(" LIMIT %d OFFSET %d ", c.PageSize, (c.Page-1)*c.PageSize)
+		// build where clause
+		query += c.Build()
 	} else {
-		// order by id
-		query += fmt.Sprintf(" ORDER BY %s ", "id")
+		// default order by id
+		query += " ORDER BY id"
 	}
 
 	rows, err := db.Query(query)
