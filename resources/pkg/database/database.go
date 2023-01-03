@@ -8,6 +8,7 @@ import (
 	"log"
 	"shinagawa-shelter/pkg/config"
 	"shinagawa-shelter/pkg/model"
+	"strconv"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -186,7 +187,23 @@ const (
 	`
 )
 
-var db *sql.DB
+var (
+	db *sql.DB
+
+	// defaultPage Default Page number
+	defaultPage uint64 = 1
+
+	// defaultPageSize Default Page size
+	defaultPageSize uint64 = 10
+)
+
+type Condition struct {
+	Category  *string
+	Latitude  *float64
+	Longitude *float64
+	Page      uint64
+	PageSize  uint64
+}
 
 func init() {
 	var err error
@@ -197,15 +214,59 @@ func init() {
 	log.Println("connected to database")
 }
 
-func FindShelters(category *string, page, pageSize *int) ([]*model.Shelter, error) {
-	q := QUERY_SELECT_ALL
-	if len(*category) > 0 {
-		q += fmt.Sprintf(" AND category::jsonb ? '%s' ", *category)
+func NewCondition(c map[string]string) *Condition {
+	if len(c) == 0 {
+		return nil
 	}
-	q += fmt.Sprintf(" LIMIT %d ", *pageSize)
-	q += fmt.Sprintf(" OFFSET %d ", (*page-1)**pageSize)
 
-	rows, err := db.Query(q)
+	category := c["category"]
+	lat, err := strconv.ParseFloat(c["lat"], 64)
+	if lat < 1 || err != nil {
+		lat = 0
+	}
+	lon, err := strconv.ParseFloat(c["lon"], 64)
+	if lon < 1 || err != nil {
+		lon = 0
+	}
+	page, err := strconv.ParseUint(c["page"], 10, 64)
+	if err != nil {
+		page = defaultPage
+	}
+	size, err := strconv.ParseUint(c["size"], 10, 64)
+	if err != nil {
+		size = defaultPageSize
+	}
+
+	return &Condition{
+		Category:  &category,
+		Latitude:  &lat,
+		Longitude: &lon,
+		Page:      page,
+		PageSize:  size,
+	}
+}
+
+func FindShelters(c *Condition) ([]*model.Shelter, error) {
+	query := QUERY_SELECT_ALL
+
+	// build where clause
+	if c != nil {
+		// category
+		if len(*c.Category) > 0 {
+			query += fmt.Sprintf(" AND category::jsonb ? '%s' ", *c.Category)
+		}
+		// order by distance
+		if *c.Latitude > 0 && *c.Longitude > 0 {
+			query += fmt.Sprintf(" ORDER BY POINT(latitude, longitude) <-> POINT(%f, %f) ", *c.Latitude, *c.Longitude)
+		}
+		// pagenation
+		query += fmt.Sprintf(" LIMIT %d OFFSET %d ", c.PageSize, (c.Page-1)*c.PageSize)
+	} else {
+		// order by id
+		query += fmt.Sprintf(" ORDER BY %s ", "id")
+	}
+
+	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}

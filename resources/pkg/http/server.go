@@ -8,12 +8,10 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math"
 	"net/http"
 	"shinagawa-shelter/pkg/config"
 	"shinagawa-shelter/pkg/database"
 	"shinagawa-shelter/pkg/model"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -28,18 +26,6 @@ var (
 
 	// ErrNon200Response non 200 status code in response
 	ErrNon200Response = errors.New("Non 200 Response found")
-
-	// DefaultCategory Default category
-	DefaultCategory string = ""
-
-	// DefaultPage Default Page number
-	DefaultPage = 1
-
-	// DefaultPageSize Default Page size
-	DefaultPageSize = 10
-
-	// MaxPageSize Maximum Page size
-	MaxPageSize = math.MaxInt
 )
 
 func SyncHandler(ctx context.Context) error {
@@ -75,7 +61,7 @@ func SyncHandler(ctx context.Context) error {
 	}
 
 	// Delete the closed shelters
-	shelters, err := database.FindShelters(&DefaultCategory, &DefaultPage, &MaxPageSize)
+	shelters, err := database.FindShelters(nil)
 	if err != nil {
 		log.Println("failed to delete closed shelters")
 		return err
@@ -115,17 +101,8 @@ func ApiHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRe
 		return events.APIGatewayProxyResponse{}, ErrNoIP
 	}
 
-	category := request.QueryStringParameters["category"]
-	page, err := strconv.Atoi(request.QueryStringParameters["page"])
-	if page < 1 || err != nil {
-		page = DefaultPage
-	}
-	size, err := strconv.Atoi(request.QueryStringParameters["size"])
-	if size < 1 || err != nil {
-		size = DefaultPageSize
-	}
-
-	shelters, err := database.FindShelters(&category, &page, &size)
+	cond := database.NewCondition(request.QueryStringParameters)
+	shelters, err := database.FindShelters(cond)
 	if err != nil {
 		log.Println("failed to find shelters", err)
 		return events.APIGatewayProxyResponse{}, ErrNon200Response
