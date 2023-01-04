@@ -1,4 +1,5 @@
-# shinagawa-shelter
+# Shinagawa Shelter
+[![CI](https://github.com/satoshiyamamoto/shinagawa-shelter/actions/workflows/deploy.yaml/badge.svg)](https://github.com/satoshiyamamoto/shinagawa-shelter/actions/workflows/deploy.yaml)
 
 東京都品川区が公開する災害時等の避難所・広域避難場所を検索する Web API です。
 
