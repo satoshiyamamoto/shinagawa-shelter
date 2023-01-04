@@ -2,6 +2,12 @@
 
 東京都品川区が公開する災害時等の避難所・広域避難場所を検索する Web API です。
 
+## Usage
+
+```bash
+curl -X GET "${Endpoint}/search?lat=35.62061596793972&lon=139.70428920382872&page=1&size=5"
+```
+
 ## Dataset
 
 [東京都オープンデータ](https://portal.data.metro.tokyo.lg.jp)の公開データを利用しています。データセットは一時間間隔で同期されます。
@@ -20,7 +26,7 @@ AWS サーバーレスアプリケーションモデルで構築されていま�
 
 ### Endpoint
 
-https://wej40u1rfc.execute-api.ap-northeast-1.amazonaws.com/Prod
+https://wej40u1rfc.execute-api.ap-northeast-1.amazonaws.com/Prod/
 
 ### Resource
 
