@@ -216,7 +216,10 @@ func init() {
 
 func NewCondition(c map[string]string) *Condition {
 	if len(c) == 0 {
-		return nil
+		return &Condition{
+			Page:     defaultPage,
+			PageSize: defaultPageSize,
+		}
 	}
 
 	category := c["category"]
@@ -250,12 +253,14 @@ func (c *Condition) Build() string {
 	var query string
 
 	// category
-	if len(*c.Category) > 0 {
+	if c.Category != nil && len(*c.Category) > 0 {
 		query += fmt.Sprintf(" AND category::jsonb ? '%s' ", *c.Category)
 	}
-	// order by distance
-	if *c.Latitude > 0 && *c.Longitude > 0 {
+	// order by
+	if c.Latitude != nil && *c.Latitude > 0 && c.Longitude != nil && *c.Longitude > 0 {
 		query += fmt.Sprintf(" ORDER BY POINT(latitude, longitude) <-> POINT(%f, %f) ", *c.Latitude, *c.Longitude)
+	} else {
+		query += " ORDER BY id "
 	}
 	// pagenation
 	query += fmt.Sprintf(" LIMIT %d OFFSET %d ", c.PageSize, (c.Page-1)*c.PageSize)
