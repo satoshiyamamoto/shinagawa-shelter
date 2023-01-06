@@ -12,13 +12,7 @@ import (
 )
 
 func GetDataset(url string) (io.Reader, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	client := new(http.Client)
-	resp, err := client.Do(req)
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
