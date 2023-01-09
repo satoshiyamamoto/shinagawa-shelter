@@ -6,15 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"shinagawa-shelter/pkg/config"
-	"shinagawa-shelter/pkg/database"
-	"shinagawa-shelter/pkg/model"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/satoshiyamamoto/shinagawa-shelter/pkg/config"
+	"github.com/satoshiyamamoto/shinagawa-shelter/pkg/database"
+	"github.com/satoshiyamamoto/shinagawa-shelter/pkg/model"
 )
 
 var (
@@ -22,10 +21,10 @@ var (
 	DefaultHTTPGetAddress = "https://checkip.amazonaws.com"
 
 	// ErrNoIP No IP found in response
-	ErrNoIP = errors.New("No IP in HTTP response")
+	ErrNoIP = errors.New("no IP in http response")
 
 	// ErrNon200Response non 200 status code in response
-	ErrNon200Response = errors.New("Non 200 Response found")
+	ErrNon200Response = errors.New("non 200 response found")
 )
 
 func SyncHandler(ctx context.Context) error {
@@ -92,7 +91,7 @@ func ApiHandler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRe
 		return events.APIGatewayProxyResponse{}, ErrNon200Response
 	}
 
-	ip, err := ioutil.ReadAll(resp.Body)
+	ip, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return events.APIGatewayProxyResponse{}, err
 	}

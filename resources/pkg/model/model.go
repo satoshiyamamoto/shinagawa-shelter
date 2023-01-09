@@ -3,8 +3,9 @@ package model
 import (
 	"encoding/json"
 	"log"
-	"shinagawa-shelter/pkg/csv"
 	"time"
+
+	"github.com/satoshiyamamoto/shinagawa-shelter/pkg/csv"
 )
 
 type Shelter struct {

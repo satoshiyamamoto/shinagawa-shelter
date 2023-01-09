@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"unicode/utf8"
 
@@ -20,7 +19,7 @@ func GetDataset(url string) (io.Reader, error) {
 
 	var b bytes.Buffer
 	r := io.TeeReader(resp.Body, &b)
-	ioutil.ReadAll(r)
+	io.ReadAll(r)
 
 	r = bytes.NewBuffer(b.Bytes())
 

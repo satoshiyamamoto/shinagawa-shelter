@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"shinagawa-shelter/pkg/config"
-	"shinagawa-shelter/pkg/model"
 	"strconv"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/satoshiyamamoto/shinagawa-shelter/pkg/config"
+	"github.com/satoshiyamamoto/shinagawa-shelter/pkg/model"
 )
 
 const (
