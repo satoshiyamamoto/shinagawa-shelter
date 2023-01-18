@@ -21,7 +21,7 @@ curl -X GET "${Endpoint}/search?lat=35.62061596793972&lon=139.70428920382872&pag
 
 AWS サーバーレスアプリケーションモデルで構築されています。
 
-![アーキテクチャ図](./resources/doc/architecture.png)
+![アーキテクチャ図](./docs/architecture.png)
 
 ## Web API
 
